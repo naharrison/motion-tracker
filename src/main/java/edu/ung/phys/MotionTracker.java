@@ -18,6 +18,8 @@ public class MotionTracker extends PApplet {
   public boolean isRunning;
   public ArrayList<Float> trailX, trailY;
   public PImage boogie;
+  public float axisStart, axisEnd;
+  public int nAxisDiv, deltat, elapsedFrames, frRate, pxPerFrame;
   
   
   public void settings() {
@@ -26,19 +28,42 @@ public class MotionTracker extends PApplet {
   
   
   public void setup() {
-    frameRate(20);
+    frRate = 20;
+    frameRate(frRate);
+    textSize(14);
+    elapsedFrames = 0;
+    pxPerFrame = 2;
     markerX = 0;
     markerY = height/2;
     isRunning = false;
     trailX = new ArrayList<>();
     trailY = new ArrayList<>();
     boogie = loadImage("boogie.png");
+    axisStart = (float) 0.25;
+    axisEnd = (float) 0.75;
+    nAxisDiv = 10;
+    deltat = (int) ((width/frRate)/pxPerFrame);
   }
   
   
   public void draw() {
     background(200);
 
+    makeButtons();
+    makeCanvas();
+    makeSystem();
+
+    if(isRunning && markerX < width) {
+      markerX += pxPerFrame;
+      trailX.add(markerX);
+      trailY.add(markerY);
+      elapsedFrames++;
+    }
+
+  }
+
+
+  private void makeButtons() {
     fill(0, 255, 0);
     rect(10, height-30, 20, 20);
     if(mouseX > 10 && mouseX < 30 && mouseY > height-30 && mouseY < height-10 && mousePressed) {
@@ -52,8 +77,12 @@ public class MotionTracker extends PApplet {
       markerX = 0;
       trailX.clear();
       trailY.clear();
+      elapsedFrames = 0;
     }
+  }
 
+
+  private void makeCanvas() {
     pushMatrix();
     translate((float) (0.05*width), 20);
     scale((float) 0.9, (float) 0.7);
@@ -65,22 +94,32 @@ public class MotionTracker extends PApplet {
       fill(255, 0, 0);
       ellipse(trailX.get(k), trailY.get(k), 5, 5);
     }
+    fill(0);
+    for(int k = 0; k <= nAxisDiv; k++) {
+      text(String.format("%d", k), -20, height - k*(height/nAxisDiv));
+    }
+    for(int k = 0; k <= deltat; k++) {
+      text(String.format("%d", k), k*(width/deltat), height+20);
+    }
     popMatrix();
+  }
 
+
+  private void makeSystem() {
     strokeWeight(4);
-    line((float) (0.25*width), height - 30, (float) (0.75*width), height - 30);
+    line((float) (axisStart*width), height - 30, (float) (axisEnd*width), height - 30);
     strokeWeight(1);
-
-    float constrainedX = mouseX < 0.25*width ? (float)(0.25*width) : mouseX > 0.75*width ? (float)(0.75*width) : mouseX;
-    markerY = (float) (height - height*(constrainedX - 0.25*width)/(0.5*width));
-    image(boogie, constrainedX, height-147, 65, 114);
-
-    if(isRunning && markerX < width - 20) {
-      markerX += 2;
-      trailX.add(markerX);
-      trailY.add(markerY);
+    fill(0);
+    for(int k = 0; k <= nAxisDiv; k++) {
+      text(String.format("%d", k), (float) (axisStart*width + k*(width*(axisEnd-axisStart)/nAxisDiv)), height-10);
     }
 
+    float constrainedX = mouseX < axisStart*width ? (float)(axisStart*width) : mouseX > axisEnd*width ? (float)(axisEnd*width) : mouseX;
+    markerY = (float) (height - height*(constrainedX - axisStart*width)/((axisEnd-axisStart)*width));
+    image(boogie, constrainedX, height-147, 65, 114);
+
+    text("Time:", width/10, 9*height/10 - 30);
+    text(String.format("%d", elapsedFrames/frRate) , width/10 + 50, 9*height/10 - 30);
   }
 
 

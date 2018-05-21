@@ -3,6 +3,7 @@ package edu.ung.phys;
 import processing.core.PApplet;
 import processing.core.PImage;
 import java.util.ArrayList;
+import java.io.BufferedReader;
 
 /**
  * @author naharrison
@@ -17,6 +18,7 @@ public class MotionTracker extends PApplet {
   public float markerX, markerY;
   public boolean isRunning;
   public ArrayList<Float> trailX, trailY;
+  public ArrayList<Double> xdata, ydata;
   public PImage boogie;
   public float axisStart, axisEnd;
   public int nAxisDiv, deltat, elapsedFrames, frRate, pxPerFrame;
@@ -43,6 +45,10 @@ public class MotionTracker extends PApplet {
     axisEnd = (float) 0.75;
     nAxisDiv = 10;
     deltat = (int) ((width/frRate)/pxPerFrame);
+    BufferedReader dataReader = createReader("XYdata.txt");
+    Txt2Data txt2d = new Txt2Data(dataReader);
+    xdata = txt2d.x;
+    ydata = txt2d.y;
   }
   
   
@@ -100,6 +106,9 @@ public class MotionTracker extends PApplet {
     }
     for(int k = 0; k <= deltat; k++) {
       text(String.format("%d", k), k*(width/deltat), height+20);
+    }
+    for(int k = 0; k < xdata.size()-1; k++) {
+      line((float) (width*xdata.get(k)/deltat), (float) (height - height*ydata.get(k)/nAxisDiv), (float) (width*xdata.get(k+1)/deltat), (float) (height - height*ydata.get(k+1)/nAxisDiv));
     }
     popMatrix();
   }
